@@ -136,7 +136,7 @@ def match_game_version(release, game_version):
         return True
 
     release_version = parse_game_version(release)
-    return release_version == game_version or (release_version == Version('0.18') and game_version == Version(1.0))
+    return release_version == game_version or (release_version == Version('0.18') and game_version == Version('1.0'))
 
 
 class ProgressWidget:
