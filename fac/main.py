@@ -48,7 +48,7 @@ def main():
     api = API()
     config = Config()
     db = DB(config, api)
-    manager = ModManager(api=api, config=config, db=db)
+    manager = ModManager(api=api, config=config, db=db, log=log)
 
     for command_class in CommandRegistry.commands:
         command = command_class(manager)

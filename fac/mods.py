@@ -271,10 +271,11 @@ class UnpackedMod(Mod):
 class ModManager:
     """Provides access to the factorio mods directory"""
 
-    def __init__(self, config, api, db):
+    def __init__(self, config, api, db, log):
         self.api = api
         self.config = config
         self.db = db
+        self.log = log
         self.mods_json = None
 
     def load(self):
@@ -370,7 +371,7 @@ class ModManager:
 
         res = [mod for mod in self.find_mods(req.name)
                if mod.version in spec and
-               (ignore_game_ver or mod.game_version == game_ver)]
+               (ignore_game_ver or match_game_version(mod.game_version, game_ver))]
         res.sort(key=lambda m: m.version, reverse=True)
         return res
 
@@ -389,7 +390,7 @@ class ModManager:
         res = [release
                for release in mod.releases
                if match_game_version(release, game_version)
-               and (latest and release.version != latest.version)]
+               and (not latest or release.version != latest.version)]
 
         res.sort(key=lambda r: Version(r.version), reverse=True)
         yield from res

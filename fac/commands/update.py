@@ -1,6 +1,5 @@
 from fac.commands import Command, Arg
-from fac.utils import prompt, Version
-
+from fac.utils import prompt, Version, match_game_version
 
 class UpdateCommand(Command):
     """Update installed mods."""
@@ -32,22 +31,21 @@ class UpdateCommand(Command):
         self.db.update()
 
         for local_mod in installed:
-            print("Checking: %s" % local_mod.name)
-
-            try:
-                release = next(self.manager.get_releases(local_mod.name,
-                                                         game_ver))
-            except StopIteration:
-                continue
+            print("Checking: %s %s" % (local_mod.name, local_mod.version))
 
             found_update = False
             local_ver = local_mod.version
             latest_ver = local_ver
             latest_release = None
 
-            for release in remote_mod.releases:
-                if not args.ignore_game_ver and \
-                        parse_game_version(release) != game_ver:
+            try:
+                releases = self.manager.get_releases(local_mod.name, game_ver)
+            except StopIteration:
+                print("Cannot get_releases for mod %s with game version %s" % (local_mod.name, game_ver))
+                continue
+
+            for release in releases:
+                if not args.ignore_game_ver and not match_game_version(release, game_ver):
                     continue
 
                 release_ver = Version(release.version)
@@ -56,7 +54,7 @@ class UpdateCommand(Command):
                     found_update = True
                     latest_ver = release_ver
                     latest_release = release
-                    
+
 
             update_mod = True
             if found_update:

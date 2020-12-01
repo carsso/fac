@@ -111,6 +111,7 @@ class InstallCommand(Command):
         for mod in self.manager.find_mods():
             try:
                 deps += mod.info.dependencies
+                self.log.debug("Dependencies needed for %s %s : %s" % (mod.name, mod.version, mod.info.dependencies))
             except AttributeError:
                 pass
 
@@ -132,20 +133,26 @@ class InstallCommand(Command):
             if depreq.name.startswith('!'):
                 continue  # ignore incompatible dependency
 
+            print("Resolving needed dependency: %s" % dep)
             if self.manager.resolve_local_requirement(
                     depreq,
                     ignore_game_ver=args.ignore_game_ver):
+                print("Dependency locally met : %s" % depreq.name)
                 continue
             try:
                 # FIXME: we only try the first release here
-                release = next(
-                    self.manager.resolve_remote_requirement(
-                        depreq,
-                        ignore_game_ver=args.ignore_game_ver
-                    )
+                releases = self.manager.resolve_remote_requirement(
+                    depreq,
+                    ignore_game_ver=args.ignore_game_ver
                 )
+                release = next(releases)
             except ModNotFoundError:
                 print("Dependency not found: %s" % depreq.name)
+                deps_ok = False
+                break
+            except StopIteration:
+                print("Dependency release not found: %s" % depreq.name)
+                print("Make sure the %s mod is available on mods.factorio.com and compatible with your game version : %s" % (dep, self.config.game_version_major))
                 deps_ok = False
                 break
 
@@ -155,7 +162,12 @@ class InstallCommand(Command):
                 break
 
             if (depreq.name, release) not in deps_to_install:
-                print("Adding dependency: %s %s" % (
+                mod = self.manager.get_mod(depreq.name)
+                spec = depreq.specifier
+                if mod.version in spec:
+                    print("Dependency already installed : %s %s" % (mod.name, mod.version))
+                    continue
+                print("Installing dependency: %s version %s" % (
                     depreq.name, release.version
                 ))
                 deps_to_install.append((depreq.name, release))

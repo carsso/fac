@@ -26,6 +26,7 @@ class Command(metaclass=CommandRegistry):
         self.api = manager.api
         self.config = manager.config
         self.db = manager.db
+        self.log = manager.log
 
     def create_parser(self, subparser, parents):
         doc = self.__doc__ or ""

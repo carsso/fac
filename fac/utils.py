@@ -122,6 +122,8 @@ def parse_requirement(text):
 
 
 def parse_game_version(info):
+    if isinstance(info, Version):
+        return info
     if 'info_json' in info:
         info = info.info_json
     try:
